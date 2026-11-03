@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct LauncherView:View {
  @StateObject private var imports=DataImportManager()
  @State private var picking=false
+ @State private var confirmingDelete=false
  @State private var manifest:AssetManifest?
  @State private var error=""
  var body:some View {
@@ -17,12 +18,14 @@ struct LauncherView:View {
    Button("Kiểm tra lại dữ liệu đã import"){imports.revalidate()}.disabled(imports.importedRoot==nil || imports.state == .importing || imports.state == .validating)
    Button("Dừng import, giữ phần đã xác minh"){imports.cancel()}.disabled(imports.state != .importing)
    Text(error).foregroundColor(.red)
+   Button("Xoá bản dữ liệu app quản lý",role:.destructive){confirmingDelete=true}.disabled(imports.importedRoot==nil || imports.state == .importing || imports.state == .validating)
    Divider()
    Text("Game runtime: NOT COMPLETED").font(.headline)
    Text("Dữ liệu hợp lệ không đồng nghĩa engine tương thích. PLAY chỉ được bật sau khi tích hợp runtime và kiểm thử thế giới 3D.")
    Button("PLAY — runtime chưa khả dụng"){}.disabled(true)
    Spacer()
   }.padding().navigationTitle("Import & diagnostics")}
+  .confirmationDialog("Xoá bản sao game do app quản lý? Thư mục nguồn bạn đã chọn không bị xoá.",isPresented:$confirmingDelete,titleVisibility:.visible){Button("Xoá bản sao",role:.destructive){imports.deleteManagedImportAfterConfirmation()};Button("Huỷ",role:.cancel){}}
   .task {do{guard let url=Bundle.main.url(forResource:"expected-manifest",withExtension:"json") else{throw ImportFailure.invalid("Thiếu manifest của bộ data đã audit")};let m=try JSONDecoder().decode(AssetManifest.self,from:Data(contentsOf:url));try m.validate();manifest=m}catch{self.error=error.localizedDescription}}
   .fileImporter(isPresented:$picking,allowedContentTypes:[.folder],allowsMultipleSelection:false){result in
    do{guard let source=try result.get().first,let m=manifest else{return};imports.start(source:source,manifest:m)}catch{self.error=error.localizedDescription}

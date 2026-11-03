@@ -23,6 +23,17 @@ import Combine
   guard let folder=importedRoot,task==nil else{return}
   do{let m=try JSONDecoder().decode(AssetManifest.self,from:Data(contentsOf:folder.appendingPathComponent("import-manifest.json")));start(source:folder,manifest:m)}catch{state = .invalid;message=error.localizedDescription}
  }
+ func deleteManagedImportAfterConfirmation(){
+  guard task==nil,let folder=importedRoot else{return}
+  let id=folder.lastPathComponent
+  guard id.count==64,id.utf8.allSatisfy({(48...57).contains($0)||(97...102).contains($0)}),folder.deletingLastPathComponent().standardizedFileURL==store.standardizedFileURL else{return}
+  let active=store.appendingPathComponent("active-import.txt")
+  task=Task {
+   do{try await Task.detached(priority:.utility){try FileManager.default.removeItem(at:folder);try? FileManager.default.removeItem(at:active)}.value
+    importedRoot=nil;state = .notImported;progress=0;message="Đã xoá bản sao do app quản lý. Thư mục nguồn không bị thay đổi."
+   }catch{message=error.localizedDescription};task=nil
+  }
+ }
  func cancel(){task?.cancel()}
  func start(source:URL,manifest:AssetManifest){
   guard task==nil else{return}
