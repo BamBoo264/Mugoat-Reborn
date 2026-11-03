@@ -11,7 +11,18 @@ import Combine
  @Published private(set) var importedRoot:URL?
  private var task:Task<Void,Never>?
  private let store:URL
- init(){store=FileManager.default.urls(for:.applicationSupportDirectory,in:.userDomainMask)[0].appendingPathComponent("GameImports",isDirectory:true)}
+ init(){
+  store=FileManager.default.urls(for:.applicationSupportDirectory,in:.userDomainMask)[0].appendingPathComponent("GameImports",isDirectory:true)
+  let saved=store.appendingPathComponent("active-import.txt")
+  if let id=try? String(contentsOf:saved,encoding:.utf8),id.count==64,id.utf8.allSatisfy({(48...57).contains($0)||(97...102).contains($0)}) {
+   let folder=store.appendingPathComponent(id)
+   if FileManager.default.fileExists(atPath:folder.path){importedRoot=folder;message="Đã tìm thấy dữ liệu app quản lý. Nhấn Kiểm tra lại; không cần cấp lại quyền thư mục ngoài."}
+  }
+ }
+ func revalidate(){
+  guard let folder=importedRoot,task==nil else{return}
+  do{let m=try JSONDecoder().decode(AssetManifest.self,from:Data(contentsOf:folder.appendingPathComponent("import-manifest.json")));start(source:folder,manifest:m)}catch{state = .invalid;message=error.localizedDescription}
+ }
  func cancel(){task?.cancel()}
  func start(source:URL,manifest:AssetManifest){
   guard task==nil else{return}
@@ -96,6 +107,8 @@ import Combine
    done+=entry.bytes;await report(done,manifest.totalBytes,entry.path)
   }
   try encoded.write(to:stage.appendingPathComponent("import-manifest.json"),options:.atomic)
-  try fm.moveItem(at:stage,to:final);return final
+  try fm.moveItem(at:stage,to:final)
+  try id.write(to:store.appendingPathComponent("active-import.txt"),atomically:true,encoding:.utf8)
+  return final
  }
 }

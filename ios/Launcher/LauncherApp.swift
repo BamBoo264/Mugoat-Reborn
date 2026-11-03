@@ -14,6 +14,7 @@ struct LauncherView:View {
    Text(imports.message).textSelection(.enabled)
    ProgressView(value:imports.progress)
    Button("IMPORT GTA V GAME DATA"){picking=true}.buttonStyle(.borderedProminent).disabled(manifest==nil || imports.state == .importing || imports.state == .validating)
+   Button("Kiểm tra lại dữ liệu đã import"){imports.revalidate()}.disabled(imports.importedRoot==nil || imports.state == .importing || imports.state == .validating)
    Button("Dừng import, giữ phần đã xác minh"){imports.cancel()}.disabled(imports.state != .importing)
    Text(error).foregroundColor(.red)
    Divider()

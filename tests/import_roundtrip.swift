@@ -12,6 +12,7 @@ import CryptoKit
   let manifest=AssetManifest(schemaVersion:1,profile:"synthetic",contentVersion:nil,files:[.init(path:"sample.bin",bytes:UInt64(bytes.count),sha256:hash)],totalBytes:UInt64(bytes.count),integrity:"sha256-baseline",runtimeCompatibility:"NOT_COMPLETED")
   let first=try await DataImportManager.perform(source:source,manifest:manifest,store:store){_,_,_ in}
   let copied=try Data(contentsOf:first.appendingPathComponent("sample.bin"));precondition(copied==bytes)
+  let receipt=try String(contentsOf:store.appendingPathComponent("active-import.txt"),encoding:.utf8);precondition(receipt==first.lastPathComponent)
   let second=try await DataImportManager.perform(source:source,manifest:manifest,store:store){_,_,_ in};precondition(second==first)
   let unchanged=try Data(contentsOf:path);precondition(unchanged==bytes)
   let corrupt=Data(repeating:0x11,count:bytes.count);try corrupt.write(to:first.appendingPathComponent("sample.bin"))
