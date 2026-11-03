@@ -1,3 +1,5 @@
+> Historical N001 design. For the current localization-only N002 module, see [N002_NATIVE_UPDATE.md](N002_NATIVE_UPDATE.md). The importer described below is no longer injected into the native app.
+
 # Native runtime integration â€” experimental, NOT COMPLETED
 
 The required `E:\GTAV_IOS` dataset uses a native archive layout. The Nova WASM runtime is not a compatible substitute. The independent script core in this repository is partial and cannot run GTA V gameplay.

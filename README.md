@@ -1,5 +1,21 @@
 # Mugoat Reborn
 
+## Current native integration branch (N002)
+
+`native-runtime-bridge` locally composes a user-supplied native IPA with an authored Vietnamese-language bootstrap. It is **not** recovered GTA engine source. The source-only GitHub workflow never receives the original IPA or game data. See [N002 changes and iOS requirements](docs/N002_NATIVE_UPDATE.md).
+
+The old import overlay is removed in N002. Copy your data to Files > On My iPhone > Mugoat Reborn > GTAV (common.rpf directly inside), then restart. Minimum iOS remains 16.3; actual device launch and localization must be verified.
+
+Build the manual `native-bridge.yml` workflow on this branch, download its two authored files, then compose locally:
+
+```powershell
+python tools/package_native_bridge.py --source "E:\GTAV-unsigned-2-11.ipa" --bridge libRebornBridge.dylib --localization launcher_vi.json --output Mugoat-Reborn-N002-UNSIGNED.ipa
+```
+
+Re-sign all app/framework code using your own valid certificate/profile. The original port executable and runtime libraries remain private inputs, not public source.
+
+## Earlier independent diagnostic project
+
 Fresh native iOS launcher/import architecture. **This is not yet a playable GTA V port. Runtime, rendering, controls and device benchmarks are NOT COMPLETED.**
 
 1. Clone this repository on an Apple Silicon Mac.

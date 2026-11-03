@@ -1,4 +1,4 @@
-import importlib.util,struct,unittest
+import importlib.util,struct,unittest,tempfile,zipfile,plistlib,json,hashlib
 from pathlib import Path
 spec=importlib.util.spec_from_file_location('composer',Path(__file__).parents[1]/'tools/package_native_bridge.py')
 m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
@@ -27,4 +27,29 @@ class ComposerTests(unittest.TestCase):
  def test_wrong_architecture_rejected(self):
   b=fixture();struct.pack_into('<I',b,4,7)
   with self.assertRaises(ValueError):m.inject(b)
+class CompositionTests(unittest.TestCase):
+ def test_local_composition_preserves_runtime_and_replaces_only_identity(self):
+  with tempfile.TemporaryDirectory() as folder:
+   folder=Path(folder);source=folder/'original.ipa';bridge=folder/'bridge.dylib';language=folder/'launcher_vi.json';out=folder/'reborn.ipa'
+   executable=bytes(fixture());h=hashlib.sha256(executable).hexdigest();m.SUPPORTED.add(h)
+   library=b'original runtime library unchanged'
+   with zipfile.ZipFile(source,'w') as z:
+    z.writestr('Payload/GTAV.app/Info.plist',plistlib.dumps({'CFBundleExecutable':'GTA5','CFBundleIdentifier':'com.macport.gtav','MinimumOSVersion':'16.3'}))
+    z.writestr('Payload/GTAV.app/GTA5',executable)
+    z.writestr('Payload/GTAV.app/Frameworks/libgtacompat.dylib',library)
+    z.writestr('Payload/GTAV.app/_CodeSignature/CodeResources',b'old signature')
+   before=source.read_bytes();header=bytearray(32);struct.pack_into('<I',header,0,0xfeedfacf);struct.pack_into('<I',header,12,6);bridge.write_bytes(header)
+   language.write_text(json.dumps({'language':'vi','launcher':{'PLAY':'CHƠI'}}),encoding='utf-8')
+   try:
+    report=m.compose(source,bridge,language,out)
+    self.assertEqual(source.read_bytes(),before);self.assertEqual(report['engineFileSectionsUnchanged'],1)
+    with zipfile.ZipFile(out) as z:
+     self.assertIsNone(z.testzip());self.assertEqual(z.read('Payload/GTAV.app/Frameworks/libgtacompat.dylib'),library)
+     self.assertEqual(z.read('Payload/GTAV.app/launcher_vi.json'),language.read_bytes())
+     self.assertNotIn('Payload/GTAV.app/reborn-expected-manifest.json',z.namelist())
+     self.assertNotIn('Payload/GTAV.app/_CodeSignature/CodeResources',z.namelist())
+     info=plistlib.loads(z.read('Payload/GTAV.app/Info.plist'))
+     self.assertEqual(info['CFBundleIdentifier'],'app.bamboo264.reborn.native');self.assertEqual(info['MinimumOSVersion'],'16.3')
+    with self.assertRaises(ValueError):m.compose(source,bridge,language,out)
+   finally:m.SUPPORTED.remove(h)
 if __name__=='__main__':unittest.main()
