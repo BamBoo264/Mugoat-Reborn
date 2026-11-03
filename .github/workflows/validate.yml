@@ -42,6 +42,10 @@ jobs:
         run: |
           swiftc -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift ios/Runtime/ResourceMemory.swift ios/Runtime/NativeAssetStore.swift ios/Runtime/RuntimeBootstrap.swift tests/bootstrap_native.swift "$RUNNER_TEMP/runtime-plain/runtime.a" -lz -o "$RUNNER_TEMP/bootstrap"
           "$RUNNER_TEMP/bootstrap"
+      - name: Original script loader and bounded bytecode VM
+        run: |
+          swiftc -sanitize=address -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift ios/Runtime/ResourceMemory.swift ios/Runtime/ScriptProgram.swift ios/Runtime/ScriptMachine.swift tests/script_native.swift "$RUNNER_TEMP/runtime-asan/runtime.a" -lz -o "$RUNNER_TEMP/script-vm"
+          "$RUNNER_TEMP/script-vm"
       - name: iPhone SDK type check
         run: xcrun swiftc -typecheck -parse-as-library -target arm64-apple-ios16.0 -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" -import-objc-header ios/Runtime/RuntimeBridge.h ios/Launcher/*.swift ios/Runtime/*.swift
       - run: command -v xcodegen || brew install xcodegen
