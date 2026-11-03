@@ -7,12 +7,16 @@ settings:
     SWIFT_VERSION: "5.0"
     PRODUCT_BUNDLE_IDENTIFIER: vn.mugoat.reborn.diagnostics
     CODE_SIGNING_ALLOWED: NO
+    SWIFT_OBJC_BRIDGING_HEADER: Runtime/RuntimeBridge.h
 targets:
   MugoatReborn:
     type: application
     platform: iOS
     sources:
       - Launcher
+      - Runtime
+    dependencies:
+      - sdk: libz.tbd
     info:
       path: Build/Info.plist
       properties:

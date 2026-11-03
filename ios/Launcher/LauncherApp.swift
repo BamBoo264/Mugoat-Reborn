@@ -7,6 +7,8 @@ struct LauncherView:View {
  @State private var confirmingDelete=false
  @State private var manifest:AssetManifest?
  @State private var error=""
+ @State private var catalog=""
+ @State private var scanning=false
  var body:some View {
   NavigationView {VStack(alignment:.leading,spacing:20){
    Text("MUGOAT REBORN").font(.largeTitle.bold())
@@ -19,6 +21,11 @@ struct LauncherView:View {
    Button("Dừng import, giữ phần đã xác minh"){imports.cancel()}.disabled(imports.state != .importing)
    Text(error).foregroundColor(.red)
    Button("Xoá bản dữ liệu app quản lý",role:.destructive){confirmingDelete=true}.disabled(imports.importedRoot==nil || imports.state == .importing || imports.state == .validating)
+   Button(scanning ? "Đang đọc archive…":"Lập chỉ mục RPF bằng runtime mới"){
+    guard let root=imports.importedRoot else{return};scanning=true
+    Task{do{let report=try await Task.detached(priority:.utility){try RuntimeCatalog.scan(root)}.value;catalog=report.summary}catch{catalog=error.localizedDescription};scanning=false}
+   }.disabled(imports.importedRoot==nil || scanning || imports.state != .ready)
+   Text(catalog).font(.caption).textSelection(.enabled)
    Divider()
    Text("Game runtime: NOT COMPLETED").font(.headline)
    Text("Dữ liệu hợp lệ không đồng nghĩa engine tương thích. PLAY chỉ được bật sau khi tích hợp runtime và kiểm thử thế giới 3D.")

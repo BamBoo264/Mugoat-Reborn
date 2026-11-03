@@ -23,8 +23,19 @@ jobs:
         run: |
           swiftc ios/Launcher/ImportManifest.swift ios/Launcher/DataImportManager.swift tests/import_roundtrip.swift -o "$RUNNER_TEMP/import-tests"
           "$RUNNER_TEMP/import-tests"
+      - name: Original native archive runtime tests
+        run: |
+          python3 tests/rpf_fixture.py "$RUNNER_TEMP/rpf-fixtures"
+          clang -fsanitize=address,undefined -c ios/Runtime/Inflate.c -o "$RUNNER_TEMP/inflate.o"
+          swiftc -sanitize=address -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift tests/rpf_native.swift "$RUNNER_TEMP/inflate.o" -lz -o "$RUNNER_TEMP/rpf-native"
+          "$RUNNER_TEMP/rpf-native" "$RUNNER_TEMP/rpf-fixtures"
+      - name: Production asynchronous asset scheduler
+        run: |
+          clang -c ios/Runtime/Inflate.c -o "$RUNNER_TEMP/inflate-plain.o"
+          swiftc -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift ios/Runtime/NativeAssetStore.swift tests/asset_store.swift "$RUNNER_TEMP/inflate-plain.o" -lz -o "$RUNNER_TEMP/asset-store"
+          "$RUNNER_TEMP/asset-store" "$RUNNER_TEMP/rpf-fixtures"
       - name: iPhone SDK type check
-        run: xcrun swiftc -typecheck -parse-as-library -target arm64-apple-ios16.0 -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" ios/Launcher/*.swift
+        run: xcrun swiftc -typecheck -parse-as-library -target arm64-apple-ios16.0 -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" -import-objc-header ios/Runtime/RuntimeBridge.h ios/Launcher/*.swift ios/Runtime/*.swift
       - run: command -v xcodegen || brew install xcodegen
       - name: Build diagnostic import app; game runtime is NOT COMPLETED
         run: bash tools/build_diagnostics.sh
