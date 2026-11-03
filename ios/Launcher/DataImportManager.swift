@@ -44,7 +44,7 @@ import Combine
   guard resolved.hasPrefix(root.resolvingSymlinksInPath().standardizedFileURL.path+"/") else{throw ImportFailure.invalid("Path escapes source: "+entry.path)}
   guard FileManager.default.fileExists(atPath:f.path) else{throw ImportFailure.missing(entry.path)}
   let v=try f.resourceValues(forKeys:[.isRegularFileKey,.isSymbolicLinkKey,.fileSizeKey])
-  guard v.isRegularFile==true,v.isSymbolicLink!=true,UInt64(v.fileSize ?? 0)==entry.bytes else{throw ImportFailure.invalid("Wrong size/type: "+entry.path)}
+  guard v.isRegularFile==true,v.isSymbolicLink != true,UInt64(v.fileSize ?? 0)==entry.bytes else{throw ImportFailure.invalid("Wrong size/type: "+entry.path)}
   return f
  }
  nonisolated static func perform(source:URL,manifest:AssetManifest,store:URL,report:@escaping @Sendable(UInt64,UInt64,String)async->Void)async throws->URL {
@@ -71,7 +71,7 @@ import Combine
    if fm.fileExists(atPath:target.path),let v=try? target.resourceValues(forKeys:[.fileSizeKey]),UInt64(v.fileSize ?? 0)==entry.bytes,try digest(target)==entry.sha256{verified.insert(entry.path);remaining-=entry.bytes}
   }
   let disk=try store.resourceValues(forKeys:[.volumeAvailableCapacityForImportantUsageKey])
-  guard let free=disk.volumeAvailableCapacityForImportantUsage,free>=0,UInt64(free)>=remaining+min(manifest.totalBytes/20,512<<20) else{throw ImportFailure.storage(remaining)}
+  guard let free=disk.volumeAvailableCapacityForImportantUsage,free>=0,UInt64(free)>=remaining && UInt64(free)-remaining>=min(manifest.totalBytes/20,512<<20) else{throw ImportFailure.storage(remaining)}
   var done=manifest.totalBytes-remaining
   for entry in manifest.files {
    try Task.checkCancellation();if verified.contains(entry.path){continue}
