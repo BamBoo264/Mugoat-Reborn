@@ -20,6 +20,8 @@ targets:
         excludes: ["**/*.S"]
     dependencies:
       - sdk: libz.tbd
+    resources:
+      - path: Vendor/zstd/LICENSE
     info:
       path: Build/Info.plist
       properties:

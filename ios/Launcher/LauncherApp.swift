@@ -25,6 +25,10 @@ struct LauncherView:View {
     guard let root=imports.importedRoot else{return};scanning=true
     Task{do{let report=try await Task.detached(priority:.utility){try RuntimeCatalog.scan(root)}.value;catalog=report.summary}catch{catalog=error.localizedDescription};scanning=false}
    }.disabled(imports.importedRoot==nil || scanning || imports.state != .ready)
+   Button("Kiểm tra metadata khởi tạo bằng asset store mới"){
+    guard let root=imports.importedRoot else{return};scanning=true
+    Task{do{catalog=try await RuntimeBootstrap.inspect(root).summary}catch{catalog=error.localizedDescription};scanning=false}
+   }.disabled(imports.importedRoot==nil || scanning || imports.state != .ready)
    Text(catalog).font(.caption).textSelection(.enabled)
    Divider()
    Text("Game runtime: NOT COMPLETED").font(.headline)

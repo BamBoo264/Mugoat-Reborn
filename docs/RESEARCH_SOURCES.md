@@ -14,3 +14,6 @@
 - Vulkan→Metal alternative: https://github.com/KhronosGroup/MoltenVK (Apache-2.0; not itself DirectX or game runtime)
 
 Apple web pages expose JS/Markdown docs; API behavior must also pass SDK compilation and device tests. No source imported solely from a search result. No reliance on unofficial forum performance claims.
+
+- RPF7 format reference inspected, no implementation copied: https://github.com/dexyfex/CodeWalker/blob/master/CodeWalker.Core/GameFiles/RpfFile.cs
+- Zstandard official decompressor source, BSD: https://github.com/facebook/zstd/releases/tag/v1.5.7 . Version and downloaded source archive hash recorded in ios/Vendor/zstd/SOURCE.json; LICENSE retained and bundled.
