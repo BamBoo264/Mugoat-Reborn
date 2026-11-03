@@ -60,6 +60,11 @@ def compose(source,bridge,manifest,output):
   original=z.read(exe);digest=hashlib.sha256(original).hexdigest()
   if digest not in SUPPORTED:raise ValueError('Runtime is not one of the two locally audited user IPAs')
   patched,sections=inject(original)
+  # Separate installation identity: do not replace the user's original port app.
+  info['CFBundleIdentifier']='app.bamboo264.reborn.native'
+  info['CFBundleDisplayName']='Mugoat Reborn'
+  info['CFBundleName']='Mugoat Reborn'
+  rewritten_info=plistlib.dumps(info,fmt=plistlib.FMT_BINARY)
   additions={root+'/Frameworks/libRebornBridge.dylib':dylib,root+'/reborn-expected-manifest.json':manifest.read_bytes()}
   if any(s in names for s in additions):raise ValueError('Existing bridge files; refusing overwrite')
   temp=output.with_suffix('.partial')
@@ -68,7 +73,8 @@ def compose(source,bridge,manifest,output):
    with zipfile.ZipFile(temp,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as dest:
     for item in z.infolist():
      if '/_CodeSignature/' in item.filename or item.filename.endswith('/embedded.mobileprovision'):continue
-     dest.writestr(item,patched if item.filename==exe else z.read(item.filename))
+     content=patched if item.filename==exe else rewritten_info if item.filename==info_path else z.read(item.filename)
+     dest.writestr(item,content)
     for name,content in additions.items():dest.writestr(name,content)
    with zipfile.ZipFile(temp) as check:
     if check.testzip():raise ValueError('Output ZIP integrity failed')

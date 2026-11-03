@@ -1,4 +1,4 @@
-# Native runtime integration — experimental, NOT COMPLETED
+# Native runtime integration â€” experimental, NOT COMPLETED
 
 The required `E:\GTAV_IOS` dataset uses a native archive layout. The Nova WASM runtime is not a compatible substitute. The independent script core in this repository is partial and cannot run GTA V gameplay.
 
@@ -19,6 +19,12 @@ The original native launcher gets an import button. No frame loop, rendering, me
 - Button position and native launcher interaction.
 - Files provider import, interrupted import, storage failure and relaunch.
 - Runtime data/patch matching and actual world loading.
-- Controls, sound, missions, memory and 20–30 minute frame-time benchmarks.
+- Controls, sound, missions, memory and 20â€“30 minute frame-time benchmarks.
 
 Do not describe this integration as a new fully authored GTA engine, a tested playable IPA or a performance improvement before device tests.
+
+## Concrete log match
+
+The unmodified executable in `GTAV-unsigned.ipa` has UUID `9BC06659-A6CC-3470-9F22-8990D13ACC9D`, exactly matching `E:\GTAV_IOS\log\run.log`. This is stronger compatibility evidence than the v8 input. The log reports already-decrypted data and normal archive loading without external decryption patches. The preferred test package therefore uses the unsigned input. The fixed manifest excludes four generated root diagnostics; game asset hashes remain mandatory.
+
+The composed app uses bundle ID `app.bamboo264.reborn.native` and display name Mugoat Reborn, keeping it separate from the original port installation. ESign must re-sign all nested code; the composer grants no additional memory entitlement.
