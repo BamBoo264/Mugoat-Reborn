@@ -9,6 +9,17 @@ concurrency:
   group: reborn-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  portable-script-core:
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile original runtime and execute script regression tests
+        run: |
+          python3 tools/build_runtime_testlib.py /tmp/runtime-plain
+          swiftc -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift ios/Runtime/ResourceMemory.swift ios/Runtime/ScriptProgram.swift ios/Runtime/ScriptMachine.swift tests/script_native.swift /tmp/runtime-plain/runtime.a -lz -o /tmp/script-vm
+          /tmp/script-vm
   import-diagnostics:
     runs-on: macos-26
     timeout-minutes: 30
