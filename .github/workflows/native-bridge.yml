@@ -1,4 +1,4 @@
-name: Build private-input native import bridge
+name: Build native launcher Vietnamese bootstrap
 on:
   workflow_dispatch:
 permissions:
@@ -9,25 +9,23 @@ concurrency:
 jobs:
   bridge:
     runs-on: macos-15
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Test conservative local composer
-        run: python3 -m unittest discover -s tests -p test_native_composer.py -v
-      - name: Compile ARM64 source-only bridge
+      - name: Test composer and localization
+        run: python3 -m unittest discover -s tests -p 'test_native_*.py' -v
+      - name: Compile minimal ARM64 language bootstrap
         run: |
           set -eu
           mkdir -p build/bridge
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
-          xcrun --sdk iphoneos swiftc -target arm64-apple-ios16.0 -sdk "$SDK" -parse-as-library -module-name RebornBridge -emit-module -emit-objc-header-path build/bridge/RebornBridge-Swift.h -emit-object -whole-module-optimization -O ios/Launcher/ImportManifest.swift ios/Launcher/DataImportManager.swift ios/NativeBridge/NativeEntry.swift -o build/bridge/Bridge.o
-          xcrun --sdk iphoneos clang -target arm64-apple-ios16.0 -isysroot "$SDK" -fobjc-arc -fmodules -I build/bridge -c ios/NativeBridge/Entry.m -o build/bridge/Entry.o
-          xcrun --sdk iphoneos swiftc -target arm64-apple-ios16.0 -sdk "$SDK" -emit-library build/bridge/Bridge.o build/bridge/Entry.o -framework UIKit -framework Foundation -framework Combine -framework CryptoKit -o build/bridge/libRebornBridge.dylib -Xlinker -install_name -Xlinker @rpath/libRebornBridge.dylib
-          python3 tools/make_native_manifest.py ios/Launcher/expected-manifest.json build/bridge/reborn-expected-manifest.json
+          xcrun --sdk iphoneos clang -target arm64-apple-ios16.3 -isysroot "$SDK" -fobjc-arc -fmodules -O2 -dynamiclib ios/NativeBridge/Entry.m -framework Foundation -install_name @rpath/libRebornBridge.dylib -o build/bridge/libRebornBridge.dylib
+          cp ios/NativeBridge/launcher_vi.json build/bridge/launcher_vi.json
           xcrun vtool -show-build build/bridge/libRebornBridge.dylib
           shasum -a 256 build/bridge/libRebornBridge.dylib
       - uses: actions/upload-artifact@v4
         with:
-          name: Reborn-native-bridge-SOURCE-ONLY-NOT-IPA
+          name: Reborn-native-language-SOURCE-ONLY-NOT-IPA
           path: |
             build/bridge/libRebornBridge.dylib
-            build/bridge/reborn-expected-manifest.json
+            build/bridge/launcher_vi.json

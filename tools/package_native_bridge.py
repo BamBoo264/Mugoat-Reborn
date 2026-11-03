@@ -5,7 +5,8 @@ from pathlib import Path, PurePosixPath
 LOAD_PATH=b'@executable_path/Frameworks/libRebornBridge.dylib\0'
 SUPPORTED={
  '21c5fc0af5ffae8340dc920a0945ec5cee54e955b6f80188af72f036d93ee945',
- 'c7b48e0e987de1c516cfe177fce713ea67c4a0324fd31dbc19372abe3e24489f'}
+ 'c7b48e0e987de1c516cfe177fce713ea67c4a0324fd31dbc19372abe3e24489f',
+ '45db6e2caadc25db58a4e53bae0ff6c602f5836c6048ce4d9561efc3e2057054'}
 
 def inject(data):
  if len(data)<32 or struct.unpack_from('<IIII',data)!=(0xfeedfacf,0x100000c,0,2):
@@ -42,7 +43,7 @@ def inject(data):
   if out[off:off+sz]!=data[off:off+sz]:raise ValueError('Engine section modified')
  return bytes(out),len(sections)
 
-def compose(source,bridge,manifest,output):
+def compose(source,bridge,localization,output):
  if output.resolve()==source.resolve() or output.exists():raise ValueError('Output must be a new file; source is never overwritten')
  dylib=bridge.read_bytes()
  if len(dylib)<32 or struct.unpack_from('<I',dylib)[0]!=0xfeedfacf:raise ValueError('Bridge must be a thin Mach-O dylib')
@@ -58,14 +59,14 @@ def compose(source,bridge,manifest,output):
   if len(roots)!=1:raise ValueError('Expected one app')
   info_path=roots[0];root=info_path.rsplit('/',1)[0];info=plistlib.loads(z.read(info_path));exe=root+'/'+info['CFBundleExecutable']
   original=z.read(exe);digest=hashlib.sha256(original).hexdigest()
-  if digest not in SUPPORTED:raise ValueError('Runtime is not one of the two locally audited user IPAs')
+  if digest not in SUPPORTED:raise ValueError('Runtime is not one of the locally audited user IPAs')
   patched,sections=inject(original)
   # Separate installation identity: do not replace the user's original port app.
   info['CFBundleIdentifier']='app.bamboo264.reborn.native'
   info['CFBundleDisplayName']='Mugoat Reborn'
   info['CFBundleName']='Mugoat Reborn'
   rewritten_info=plistlib.dumps(info,fmt=plistlib.FMT_BINARY)
-  additions={root+'/Frameworks/libRebornBridge.dylib':dylib,root+'/reborn-expected-manifest.json':manifest.read_bytes()}
+  additions={root+'/Frameworks/libRebornBridge.dylib':dylib,root+'/launcher_vi.json':localization.read_bytes()}
   if any(s in names for s in additions):raise ValueError('Existing bridge files; refusing overwrite')
   temp=output.with_suffix('.partial')
   if temp.exists():raise ValueError('Partial output exists')
@@ -85,5 +86,5 @@ def compose(source,bridge,manifest,output):
 
 if __name__=='__main__':
  parser=argparse.ArgumentParser(description=__doc__)
- for flag in ['source','bridge','manifest','output']:parser.add_argument('--'+flag,type=Path,required=True)
- a=parser.parse_args();print(json.dumps(compose(a.source,a.bridge,a.manifest,a.output),indent=2))
+ for flag in ['source','bridge','localization','output']:parser.add_argument('--'+flag,type=Path,required=True)
+ a=parser.parse_args();print(json.dumps(compose(a.source,a.bridge,a.localization,a.output),indent=2))
