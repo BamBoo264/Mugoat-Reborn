@@ -81,6 +81,10 @@ final class RPF7Archive {
   let result=output.withUnsafeMutableBytes{o in packed.withUnsafeBytes{i in rb_inflate(i.baseAddress,UInt32(packed.count),o.baseAddress,UInt32(entry.size))}}
   guard result==1 else{throw ArchiveFailure.invalid("deflate length/trailing bytes")};return output
  }
+ func resource(_ entry:RPF7Entry)throws->ResourceMemory {
+  guard entry.resource,entry.stored>=16 else{throw ArchiveFailure.invalid("not a resource")}
+  return try ResourceMemory.decode(Self.read(file,base,length,entry.offset,entry.stored),system:entry.flags,graphics:entry.graphics)
+ }
  func nested(_ entry:RPF7Entry)throws->RPF7Archive {
   guard !entry.resource,entry.flags==0,entry.stored==0 else{throw ArchiveFailure.unsupported("nested archive is not plain storage")}
   return try RPF7Archive(file:file,base:base+entry.offset,length:entry.size)

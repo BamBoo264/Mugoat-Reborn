@@ -26,14 +26,18 @@ jobs:
       - name: Original native archive runtime tests
         run: |
           python3 tests/rpf_fixture.py "$RUNNER_TEMP/rpf-fixtures"
-          clang -fsanitize=address,undefined -c ios/Runtime/Inflate.c -o "$RUNNER_TEMP/inflate.o"
-          swiftc -sanitize=address -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift tests/rpf_native.swift "$RUNNER_TEMP/inflate.o" -lz -o "$RUNNER_TEMP/rpf-native"
+          python3 tools/build_runtime_testlib.py "$RUNNER_TEMP/runtime-asan" --sanitize
+          swiftc -sanitize=address -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift ios/Runtime/ResourceMemory.swift tests/rpf_native.swift "$RUNNER_TEMP/runtime-asan/runtime.a" -lz -o "$RUNNER_TEMP/rpf-native"
           "$RUNNER_TEMP/rpf-native" "$RUNNER_TEMP/rpf-fixtures"
       - name: Production asynchronous asset scheduler
         run: |
-          clang -c ios/Runtime/Inflate.c -o "$RUNNER_TEMP/inflate-plain.o"
-          swiftc -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift ios/Runtime/NativeAssetStore.swift tests/asset_store.swift "$RUNNER_TEMP/inflate-plain.o" -lz -o "$RUNNER_TEMP/asset-store"
+          python3 tools/build_runtime_testlib.py "$RUNNER_TEMP/runtime-plain"
+          swiftc -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift ios/Runtime/ResourceMemory.swift ios/Runtime/NativeAssetStore.swift tests/asset_store.swift "$RUNNER_TEMP/runtime-plain/runtime.a" -lz -o "$RUNNER_TEMP/asset-store"
           "$RUNNER_TEMP/asset-store" "$RUNNER_TEMP/rpf-fixtures"
+      - name: Production RSC7 resource and virtual segment decoder
+        run: |
+          swiftc -sanitize=address -import-objc-header ios/Runtime/RuntimeBridge.h ios/Runtime/RPF7Archive.swift ios/Runtime/ResourceMemory.swift tests/resource_native.swift "$RUNNER_TEMP/runtime-asan/runtime.a" -lz -o "$RUNNER_TEMP/resource-native"
+          "$RUNNER_TEMP/resource-native"
       - name: iPhone SDK type check
         run: xcrun swiftc -typecheck -parse-as-library -target arm64-apple-ios16.0 -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" -import-objc-header ios/Runtime/RuntimeBridge.h ios/Launcher/*.swift ios/Runtime/*.swift
       - run: command -v xcodegen || brew install xcodegen

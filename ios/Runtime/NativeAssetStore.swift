@@ -32,7 +32,7 @@ actor NativeAssetStore {
    let index=queue.firstIndex(where:{$0.priority == .demand}) ?? 0,job=queue.remove(at:index)
    active+=1;reads+=1;maxActive=max(maxActive,active)
    Task.detached(priority:job.priority == .demand ? .userInitiated:.utility){
-    let result=Result{try job.archive.binary(job.entry)}
+    let result=Result{try job.entry.resource ? job.archive.resource(job.entry).bytes:job.archive.binary(job.entry)}
     await self.finish(job.key,result)
    }
   }

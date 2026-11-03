@@ -7,6 +7,7 @@ settings:
     SWIFT_VERSION: "5.0"
     PRODUCT_BUNDLE_IDENTIFIER: vn.mugoat.reborn.diagnostics
     CODE_SIGNING_ALLOWED: NO
+    GCC_PREPROCESSOR_DEFINITIONS: ["$(inherited)", "ZSTD_DISABLE_ASM"]
     SWIFT_OBJC_BRIDGING_HEADER: Runtime/RuntimeBridge.h
 targets:
   MugoatReborn:
@@ -15,6 +16,8 @@ targets:
     sources:
       - Launcher
       - Runtime
+      - path: Vendor/zstd/lib
+        excludes: ["**/*.S"]
     dependencies:
       - sdk: libz.tbd
     info:
