@@ -52,7 +52,8 @@ import Combine
   let scoped=source.startAccessingSecurityScopedResource();defer{if scoped{source.stopAccessingSecurityScopedResource()}}
   // Sandbox-local folders can be readable without a security scope grant.
   guard fm.isReadableFile(atPath:source.path) else{throw ImportFailure.permission(source.lastPathComponent)}
-  let encoded=try JSONEncoder().encode(manifest)
+  let encoder=JSONEncoder();encoder.outputFormatting = [.sortedKeys]
+  let encoded=try encoder.encode(manifest)
   let id=SHA256.hash(data:encoded).map{String(format:"%02x",$0)}.joined()
   try fm.createDirectory(at:store,withIntermediateDirectories:true)
   var excluded=store;var flags=URLResourceValues();flags.isExcludedFromBackup=true;try excluded.setResourceValues(flags)
