@@ -1,0 +1,4 @@
+# Performance plan — NOT COMPLETED
+Collect frame presentation samples using monotonic timestamps, frame-time median/p95/p99 and slowest-frame percentiles; report 1% and 0.1% lows only with enough samples and explicit method. Record CPU/GPU time, waits, draw/command counts, real query latency, pipeline compile/cache misses, streaming latency/backlog, process footprint/available memory, GPU allocation estimate and thermal state separately.
+
+Test fixed scenes and paired routes before/after one change, with same data/mods/resolution/thermal starting state. 30/45/60 pacing may be offered only with renderer support; dynamic resolution only when GPU-bound. No forced thermal-policy bypass. No new blanket memory purge. Separate source I/O vs decompression vs GPU upload time. 20–30 minute soak and app-background tests required.

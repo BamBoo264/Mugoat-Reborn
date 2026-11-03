@@ -1,0 +1,4 @@
+# Rendering design — NOT COMPLETED
+Do not ship an unrelated triangle or scene as GTA. A runtime adapter must expose the real graphics command stream or native D3D11 interfaces, assets and synchronization semantics.
+
+Prefer measurement over renderer replacement. Native source route may use DXMT after exact source/license and ABI are available; web route can use existing direct-Metal host only with matching engine/data. Preserve query correctness, fences, visibility results, depth/stencil and shader binding layout. Pipeline cache keys must include GPU, shader/build hash and render state; fail cache validation safely. Spatial MetalFX can be evaluated once a real output texture exists. Temporal requires motion/depth/jitter/history conventions; no guessed inputs. Frame generation NOT COMPLETED.

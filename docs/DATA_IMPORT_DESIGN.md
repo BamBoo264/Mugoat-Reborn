@@ -1,0 +1,6 @@
+# Data import
+States implemented: NOT_IMPORTED / IMPORTING / VALIDATING / READY / INVALID_DATA / MISSING_FILES / INSUFFICIENT_STORAGE / ACCESS_PERMISSION_REQUIRED. READY refers to data import only; runtime gate remains separate and closed.
+
+Use Files folder picker; access is scoped to the selected folder while importing. Files copied off main thread via NSFileCoordinator in 4 MiB blocks, checked against length and SHA256, synchronized, moved into place after verification. Interrupted .importing file is not trusted. A matching partial import resumes by rehashing completed files. Enough disk space is checked before copying. Source data is read-only. Final data is in Application Support, excluded from backups, and does not depend on provider access after restart. Cross-provider/iCloud downloads, permission revocation and cancellation latency require actual iPhone tests.
+
+No automatic deletion. Existing final import corruption is reported, not silently overwritten. File path traversal, symlinks escaping selected root, duplicate case-insensitive names, bad sums and missing hashes rejected. Expected manifest is a local-data baseline, not proof that this is a supported GTA build. UI deletion with confirmation, import journal identity canonicalization and metadata-only startup cache are still NOT COMPLETED.

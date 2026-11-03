@@ -1,0 +1,31 @@
+name: Validate Reborn import architecture
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: reborn-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  import-diagnostics:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s tests -v
+      - name: Manifest validation tests
+        run: |
+          swiftc ios/Launcher/ImportManifest.swift tests/manifest_tests.swift -o "$RUNNER_TEMP/manifest-tests"
+          "$RUNNER_TEMP/manifest-tests"
+      - name: iPhone SDK type check
+        run: xcrun swiftc -typecheck -parse-as-library -target arm64-apple-ios16.0 -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" ios/Launcher/*.swift
+      - run: command -v xcodegen || brew install xcodegen
+      - name: Build diagnostic import app; game runtime is NOT COMPLETED
+        run: bash tools/build_diagnostics.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Reborn-IMPORT-DIAGNOSTICS-NOT-GAME
+          path: Mugoat-Reborn-Diagnostics-UNSIGNED.ipa
+          retention-days: 7

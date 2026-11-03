@@ -1,0 +1,11 @@
+audit/*.json
+*.rpf
+*.wasm
+*.ipa
+*.metallib
+*.part
+.DS_Store
+build/
+__pycache__/
+ios/Build/
+ios/*.xcodeproj/
