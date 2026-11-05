@@ -45,7 +45,7 @@ static UIViewController *topController(UIWindow *window){UIViewController *c=win
 -(void)layoutSubviews{
  [super layoutSubviews];CGFloat w=self.bounds.size.width;
  self.titleLabel.frame=CGRectMake(12,0,w-110,34);[self viewWithTag:900].frame=CGRectMake(w-96,0,55,34);[self viewWithTag:901].frame=CGRectMake(w-39,0,34,34);
- self.keys.frame=CGRectMake(8,36,w-16,self.bounds.size.height-44);self.keys.hidden=self.collapsed;
+ self.keys.frame=CGRectMake(8,36,w-16,MAX(0,self.bounds.size.height-44));self.keys.hidden=self.collapsed;
  CGFloat cell=(w-26)/6;int i=0;for(UIView *view in self.keys.subviews)if([view isKindOfClass:UIButton.class]){view.frame=CGRectMake((i%6)*cell,(i/6)*38,cell-4,34);i++;}
  self.keys.contentSize=CGSizeMake(w-16,((i+5)/6)*38);
 }

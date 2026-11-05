@@ -1,15 +1,15 @@
 # Mugoat Reborn
 
-## Current native integration branch (N002)
+## Current native integration branch (N003)
 
-`native-runtime-bridge` locally composes a user-supplied native IPA with an authored Vietnamese-language bootstrap. It is **not** recovered GTA engine source. The source-only GitHub workflow never receives the original IPA or game data. See [N002 changes and iOS requirements](docs/N002_NATIVE_UPDATE.md).
+`native-runtime-bridge` locally composes a user-supplied native IPA with an authored Vietnamese-language bootstrap. It is **not** recovered GTA engine source. The source-only GitHub workflow never receives the original IPA or game data. See [N003 Menyoo/camera/keyboard integration](docs/N003_MENYOO_CAMERA.md) and [iOS requirements](docs/N002_NATIVE_UPDATE.md).
 
-The old import overlay is removed in N002. Copy your data to Files > On My iPhone > Mugoat Reborn > GTAV (common.rpf directly inside), then restart. Minimum iOS remains 16.3; actual device launch and localization must be verified.
+The game-data import overlay remains removed. N003 uses the native v10.1 ScriptHook/Menyoo host, provisions its resource pack once, and adds a default-off experimental vehicle camera plus a draggable plugin keyboard. Copy your data to Files > On My iPhone > Mugoat Reborn > GTAV (common.rpf directly inside), then restart. Minimum iOS remains 16.3; actual device launch and localization must be verified.
 
 Build the manual `native-bridge.yml` workflow on this branch, download its two authored files, then compose locally:
 
 ```powershell
-python tools/package_native_bridge.py --source "E:\GTAV-unsigned-2-11.ipa" --bridge libRebornBridge.dylib --localization launcher_vi.json --output Mugoat-Reborn-N002-UNSIGNED.ipa
+python tools/package_native_bridge.py --source "C:\Users\Admin\Downloads\GTAV-v10.1.ipa" --bridge libRebornBridge.dylib --localization launcher_vi.json --script-pack "C:\Users\Admin\Downloads\GTAV-ScriptHook-Pack.zip" --camera RebornCamera.shv.dylib --output Mugoat-Reborn-N003-UNSIGNED.ipa
 ```
 
 Re-sign all app/framework code using your own valid certificate/profile. The original port executable and runtime libraries remain private inputs, not public source.

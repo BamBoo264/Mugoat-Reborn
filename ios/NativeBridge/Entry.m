@@ -26,9 +26,9 @@ __attribute__((constructor)) static void rebornLanguage(void) {
     }
 }
 
-static void (*launcherAppear)(id,SEL,BOOL);static BOOL checkingPack=NO;
+static void (*launcherAppear)(id,SEL,BOOL);static BOOL checkingPack=NO,attemptedPack=NO;
 static void preparePack(UIViewController *host){
- if(checkingPack||host.presentedViewController)return;
+ if(checkingPack||attemptedPack||host.presentedViewController)return;
  NSFileManager *fm=NSFileManager.defaultManager;
  NSURL *docs=[fm URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].firstObject;
  NSURL *root=[docs URLByAppendingPathComponent:@"GTAV" isDirectory:YES];
@@ -36,7 +36,7 @@ static void preparePack(UIViewController *host){
  NSURL *target=[root URLByAppendingPathComponent:@"mods/scripthook" isDirectory:YES];
  if([fm fileExistsAtPath:target.path])return;
  NSURL *source=[NSBundle.mainBundle URLForResource:@"RebornScriptHookPack" withExtension:nil];
- if(!source)return;checkingPack=YES;
+ if(!source)return;checkingPack=YES;attemptedPack=YES;
  UIAlertController *progress=[UIAlertController alertControllerWithTitle:@"Đang chuẩn bị Menyoo" message:@"Cài tài nguyên ScriptHook một lần. Vui lòng chờ; dữ liệu game gốc không bị thay đổi." preferredStyle:UIAlertControllerStyleAlert];
  [host presentViewController:progress animated:YES completion:^{
   dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY,0),^{
