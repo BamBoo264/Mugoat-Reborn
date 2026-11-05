@@ -1,4 +1,4 @@
-name: Build native launcher Vietnamese bootstrap
+name: Build Reborn native Menyoo provisioner and camera
 on:
   workflow_dispatch:
 permissions:
@@ -14,18 +14,26 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test composer and localization
         run: python3 -m unittest discover -s tests -p 'test_native_*.py' -v
-      - name: Compile minimal ARM64 language bootstrap
+      - name: Exercise native installer and camera policy on macOS
+        run: |
+          xcrun clang -fobjc-arc tests/native_pack_install.m ios/NativeBridge/PackInstall.m -I ios/NativeBridge -framework Foundation -o "$RUNNER_TEMP/pack-tests"
+          "$RUNNER_TEMP/pack-tests"
+          xcrun clang tests/native_camera_policy.c -I ios/NativeCamera -o "$RUNNER_TEMP/camera-tests"
+          "$RUNNER_TEMP/camera-tests"
+      - name: Compile ARM64 provisioner and native camera
         run: |
           set -eu
           mkdir -p build/bridge
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
-          xcrun --sdk iphoneos clang -target arm64-apple-ios16.3 -isysroot "$SDK" -fobjc-arc -fmodules -O2 -dynamiclib ios/NativeBridge/Entry.m -framework Foundation -install_name @rpath/libRebornBridge.dylib -o build/bridge/libRebornBridge.dylib
+          xcrun --sdk iphoneos clang -target arm64-apple-ios16.3 -isysroot "$SDK" -fobjc-arc -fmodules -O2 -dynamiclib ios/NativeBridge/Entry.m ios/NativeBridge/PackInstall.m -framework Foundation -framework UIKit -install_name @rpath/libRebornBridge.dylib -o build/bridge/libRebornBridge.dylib
+          xcrun --sdk iphoneos clang -target arm64-apple-ios16.3 -isysroot "$SDK" -fobjc-arc -fmodules -O2 -dynamiclib ios/NativeCamera/Camera.m -I ios/NativeCamera -L ios/NativeCamera -lScriptHookV -framework Foundation -framework UIKit -install_name @rpath/RebornCamera.shv.dylib -o build/bridge/RebornCamera.shv.dylib
           cp ios/NativeBridge/launcher_vi.json build/bridge/launcher_vi.json
           xcrun vtool -show-build build/bridge/libRebornBridge.dylib
           shasum -a 256 build/bridge/libRebornBridge.dylib
       - uses: actions/upload-artifact@v4
         with:
-          name: Reborn-native-language-SOURCE-ONLY-NOT-IPA
+          name: Reborn-native-menyoo-camera-SOURCE-ONLY-NOT-IPA
           path: |
             build/bridge/libRebornBridge.dylib
             build/bridge/launcher_vi.json
+            build/bridge/RebornCamera.shv.dylib

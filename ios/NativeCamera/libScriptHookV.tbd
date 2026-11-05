@@ -1,0 +1,8 @@
+--- !tapi-tbd
+tbd-version: 4
+targets: [ arm64-ios ]
+install-name: '@rpath/ScriptHookV.dylib'
+exports:
+  - targets: [ arm64-ios ]
+    symbols: [ _scriptRegister, _scriptWait, _nativeInit, _nativePush64, _nativeCall ]
+...

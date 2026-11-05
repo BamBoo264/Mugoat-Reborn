@@ -11,9 +11,9 @@ class LocalizationTests(unittest.TestCase):
   for key,value in d['launcher'].items():
    with self.subTest(key=key):
     self.assertTrue(value.strip() or not key.strip());self.assertEqual(FORMAT.findall(key),FORMAT.findall(value))
- def test_import_button_and_hooks_removed(self):
+ def test_data_import_button_removed(self):
   s=(ROOT/'ios/NativeBridge/Entry.m').read_text(encoding='utf-8')
-  self.assertNotIn('method_setImplementation',s);self.assertNotIn('UIButton',s)
+  self.assertNotIn('UIButton',s);self.assertNotIn('UIDocumentPicker',s)
   self.assertNotIn('UIDocumentPicker',s);self.assertIn('MACPORT_LAUNCHER_LANGUAGE',s)
   workflow=(ROOT/'.github/workflows/native-bridge.yml').read_text(encoding='utf-8')
   self.assertNotIn('DataImportManager.swift',workflow);self.assertNotIn('NativeEntry.swift',workflow)

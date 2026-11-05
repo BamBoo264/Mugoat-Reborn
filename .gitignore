@@ -9,3 +9,6 @@ build/
 __pycache__/
 ios/Build/
 ios/*.xcodeproj/
+
+# Local diagnostic text, never release inputs
+audit/*.local.txt

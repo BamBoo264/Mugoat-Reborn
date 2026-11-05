@@ -1,8 +1,10 @@
-#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+#import <objc/runtime.h>
+#import "PackInstall.h"
 #include <stdlib.h>
 
-// Only the native port's supported localization mechanism. No UI swizzling,
-// input callbacks, rendering hooks, per-frame work or game-data writes.
+// Native localization plus one-time resource provisioning on the launcher.
+// No rendering hook or game-frame callback in this module.
 __attribute__((constructor)) static void rebornLanguage(void) {
     setenv("MACPORT_LAUNCHER_LANGUAGE", "vi", 1);
     @autoreleasepool {
@@ -22,4 +24,40 @@ __attribute__((constructor)) static void rebornLanguage(void) {
         }
         if (error) NSLog(@"[Reborn] Vietnamese language registration: %@", error.localizedDescription);
     }
+}
+
+static void (*launcherAppear)(id,SEL,BOOL);static BOOL checkingPack=NO;
+static void preparePack(UIViewController *host){
+ if(checkingPack||host.presentedViewController)return;
+ NSFileManager *fm=NSFileManager.defaultManager;
+ NSURL *docs=[fm URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].firstObject;
+ NSURL *root=[docs URLByAppendingPathComponent:@"GTAV" isDirectory:YES];
+ if(![fm isReadableFileAtPath:[root URLByAppendingPathComponent:@"common.rpf"].path])return;
+ NSURL *target=[root URLByAppendingPathComponent:@"mods/scripthook" isDirectory:YES];
+ if([fm fileExistsAtPath:target.path])return;
+ NSURL *source=[NSBundle.mainBundle URLForResource:@"RebornScriptHookPack" withExtension:nil];
+ if(!source)return;checkingPack=YES;
+ UIAlertController *progress=[UIAlertController alertControllerWithTitle:@"Đang chuẩn bị Menyoo" message:@"Cài tài nguyên ScriptHook một lần. Vui lòng chờ; dữ liệu game gốc không bị thay đổi." preferredStyle:UIAlertControllerStyleAlert];
+ [host presentViewController:progress animated:YES completion:^{
+  dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY,0),^{
+   NSError *error=nil;int result=RBInstallPack(source,[root URLByAppendingPathComponent:@"mods" isDirectory:YES],&error);
+   dispatch_async(dispatch_get_main_queue(),^{
+    [progress dismissViewControllerAnimated:YES completion:^{
+     checkingPack=NO;
+     NSString *message=result?@"Đã chuẩn bị Menyoo. Hãy tắt hẳn rồi mở lại app để runtime nhận gói ScriptHook. Trong game: menu hỗ trợ > Add-ons > Menyoo. Camera thử nghiệm nằm ở nút Camera trong trang Add-ons.":(error.localizedDescription?:@"Không cài được tài nguyên. Kiểm tra dung lượng trống rồi mở lại app để thử lại.");
+     NSLog(@"[Reborn] ScriptHook preparation: %@",message);
+     UIAlertController *done=[UIAlertController alertControllerWithTitle:result?@"ScriptHook đã sẵn sàng":@"Chưa cài được Menyoo" message:message preferredStyle:UIAlertControllerStyleAlert];[done addAction:[UIAlertAction actionWithTitle:@"Đã hiểu" style:UIAlertActionStyleDefault handler:nil]];[host presentViewController:done animated:YES completion:nil];
+    }];
+   });
+  });
+ }];
+}
+static void launcherAppeared(id self,SEL cmd,BOOL animated){launcherAppear(self,cmd,animated);preparePack(self);}
+__attribute__((constructor)) static void installPackHook(void){
+ dispatch_async(dispatch_get_main_queue(),^{
+  Class cls=NSClassFromString(@"MPLauncherViewController");if(!cls)return;
+  SEL sel=@selector(viewDidAppear:);Method m=class_getInstanceMethod(cls,sel);if(!m)return;
+  launcherAppear=(void *)method_getImplementation(m);
+  if(!class_addMethod(cls,sel,(IMP)launcherAppeared,method_getTypeEncoding(m)))method_setImplementation(class_getInstanceMethod(cls,sel),(IMP)launcherAppeared);
+ });
 }

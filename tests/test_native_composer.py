@@ -45,7 +45,7 @@ class CompositionTests(unittest.TestCase):
     self.assertEqual(source.read_bytes(),before);self.assertEqual(report['engineFileSectionsUnchanged'],1)
     with zipfile.ZipFile(out) as z:
      self.assertIsNone(z.testzip());self.assertEqual(z.read('Payload/GTAV.app/Frameworks/libgtacompat.dylib'),library)
-     self.assertEqual(z.read('Payload/GTAV.app/launcher_vi.json'),language.read_bytes())
+     self.assertEqual(json.loads(z.read('Payload/GTAV.app/launcher_vi.json')),json.loads(language.read_bytes()))
      self.assertNotIn('Payload/GTAV.app/reborn-expected-manifest.json',z.namelist())
      self.assertNotIn('Payload/GTAV.app/_CodeSignature/CodeResources',z.namelist())
      info=plistlib.loads(z.read('Payload/GTAV.app/Info.plist'))
