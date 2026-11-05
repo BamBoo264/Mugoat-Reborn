@@ -26,7 +26,7 @@ static UIViewController *topController(UIWindow *window){UIViewController *c=win
  if(!(self=[super initWithFrame:frame]))return nil;
  self.held=[NSMutableSet new];self.generation=[NSMutableDictionary new];self.started=[NSMutableDictionary new];
  self.backgroundColor=[UIColor colorWithWhite:0.06 alpha:0.88];self.layer.cornerRadius=12;self.clipsToBounds=YES;
- self.titleLabel=[UILabel new];self.titleLabel.text=@"Plugin · kéo để dời";self.titleLabel.font=[UIFont boldSystemFontOfSize:12];self.titleLabel.textColor=UIColor.whiteColor;self.titleLabel.userInteractionEnabled=YES;
+ self.titleLabel=[UILabel new];self.titleLabel.text=@"Phím plugin";self.titleLabel.font=[UIFont boldSystemFontOfSize:12];self.titleLabel.textColor=UIColor.whiteColor;self.titleLabel.userInteractionEnabled=YES;
  [self.titleLabel addGestureRecognizer:[[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(drag:)]];[self addSubview:self.titleLabel];
  UIButton *fold=[UIButton buttonWithType:UIButtonTypeSystem];[fold setTitle:@"− / +" forState:UIControlStateNormal];fold.tag=900;[fold addTarget:self action:@selector(fold) forControlEvents:UIControlEventTouchUpInside];[self addSubview:fold];
  UIButton *close=[UIButton buttonWithType:UIButtonTypeSystem];[close setTitle:@"×" forState:UIControlStateNormal];close.tag=901;[close addTarget:self action:@selector(close) forControlEvents:UIControlEventTouchUpInside];[self addSubview:close];
@@ -67,7 +67,7 @@ static UIViewController *topController(UIWindow *window){UIViewController *c=win
 }
 -(void)releaseAll{for(NSNumber *k in self.held.allObjects){[self send:k down:NO];self.generation[k]=@([self.generation[k] unsignedIntegerValue]+1);}[self.held removeAllObjects];}
 -(void)close{[self releaseAll];[self removeFromSuperview];}
--(void)fold{[self releaseAll];self.collapsed=!self.collapsed;CGRect frame=self.frame;frame.size.height=self.collapsed?34:230;self.frame=frame;[self clampFrame];[self setNeedsLayout];}
+-(void)fold{[self releaseAll];self.collapsed=!self.collapsed;CGRect frame=self.frame;frame.size.height=self.collapsed?34:230;frame.size.width=self.collapsed?200:MIN(310,self.superview.bounds.size.width-self.superview.safeAreaInsets.left-self.superview.safeAreaInsets.right-12);self.frame=frame;[self clampFrame];[self setNeedsLayout];}
 -(void)camera{[self releaseAll];UIViewController *host=topController(self.window);if(host)RBPresentCameraSettings(host);}
 -(void)clampFrame{
  if(!self.superview)return;UIEdgeInsets safe=self.superview.safeAreaInsets;CGRect f=self.frame;CGSize s=self.superview.bounds.size;
@@ -77,18 +77,24 @@ static UIViewController *topController(UIWindow *window){UIViewController *c=win
  CGPoint offset=[gesture translationInView:self.superview];self.center=CGPointMake(self.center.x+offset.x,self.center.y+offset.y);[gesture setTranslation:CGPointZero inView:self.superview];[self clampFrame];
 }
 @end
-static void showKeys(UIWindow *window){
- if(!window)return;UIView *old=[window viewWithTag:0x524b59];if(old){[window bringSubviewToFront:old];return;}
+static void showKeys(UIWindow *window,BOOL expanded){
+ if(!window)return;UIView *old=[window viewWithTag:0x524b59];if(old){if(expanded&&((RBPluginKeysPanel *)old).collapsed)[(RBPluginKeysPanel *)old fold];[window bringSubviewToFront:old];return;}
  CGFloat width=MIN(310,window.bounds.size.width-window.safeAreaInsets.left-window.safeAreaInsets.right-12);
- RBPluginKeysPanel *panel=[[RBPluginKeysPanel alloc]initWithFrame:CGRectMake((window.bounds.size.width-width)/2,window.safeAreaInsets.top+8,width,230)];panel.tag=0x524b59;[window addSubview:panel];[panel clampFrame];
+ RBPluginKeysPanel *panel=[[RBPluginKeysPanel alloc]initWithFrame:CGRectMake((window.bounds.size.width-width)/2,window.safeAreaInsets.top+8,width,230)];panel.tag=0x524b59;[window addSubview:panel];if(!expanded)[panel fold];[panel clampFrame];
 }
 static void openKeys(id self,SEL cmd){
  UIViewController *host=self;UIWindow *window=host.view.window;
- if(host.presentingViewController||host.navigationController.presentingViewController)[host dismissViewControllerAnimated:YES completion:^{showKeys(window);}];else showKeys(window);
+ if(host.presentingViewController||host.navigationController.presentingViewController)[host dismissViewControllerAnimated:YES completion:^{showKeys(window,YES);}];else showKeys(window,YES);
 }
 void RBInstallKeyButton(UIViewController *host){
  for(UIBarButtonItem *item in host.navigationItem.leftBarButtonItems)if(item.tag==0x524b42)return;
  class_addMethod(host.class,NSSelectorFromString(@"rebornOpenPluginKeys"),(IMP)openKeys,"v@:");
  UIBarButtonItem *button=[[UIBarButtonItem alloc]initWithTitle:@"Phím" style:UIBarButtonItemStylePlain target:host action:NSSelectorFromString(@"rebornOpenPluginKeys")];button.tag=0x524b42;
  NSMutableArray *items=[(host.navigationItem.leftBarButtonItems?:@[]) mutableCopy];[items addObject:button];host.navigationItem.leftBarButtonItems=items;
+}
+
+void RBShowPluginKeysHUD(void){
+ for(UIScene *scene in UIApplication.sharedApplication.connectedScenes)if(scene.activationState==UISceneActivationStateForegroundActive&&[scene isKindOfClass:UIWindowScene.class]){
+  for(UIWindow *window in ((UIWindowScene *)scene).windows)if(window.isKeyWindow){showKeys(window,NO);return;}
+ }
 }

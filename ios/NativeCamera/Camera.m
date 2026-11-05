@@ -32,7 +32,9 @@ static void releaseCamera(void){
  camera=0;attachedPed=0;yawOffset=0;pitch=0;
  NSLog(@"[RebornCamera] Returned camera to game");
 }
+extern void RBShowPluginKeysHUD(void);
 static void cameraMain(void){
+ dispatch_async(dispatch_get_main_queue(),^{RBShowPluginKeysHUD();});
  NSLog(@"[RebornCamera] Native script started; disabled by default");
  for(;;){
   if(!atomic_load(&enabled)){releaseCamera();scriptWait(250);continue;}
