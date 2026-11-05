@@ -26,7 +26,7 @@ jobs:
           mkdir -p build/bridge
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           xcrun --sdk iphoneos clang -target arm64-apple-ios16.3 -isysroot "$SDK" -fobjc-arc -fmodules -O2 -dynamiclib ios/NativeBridge/Entry.m ios/NativeBridge/PackInstall.m -framework Foundation -framework UIKit -install_name @rpath/libRebornBridge.dylib -o build/bridge/libRebornBridge.dylib
-          xcrun --sdk iphoneos clang -target arm64-apple-ios16.3 -isysroot "$SDK" -fobjc-arc -fmodules -O2 -dynamiclib ios/NativeCamera/Camera.m -I ios/NativeCamera -L ios/NativeCamera -lScriptHookV -framework Foundation -framework UIKit -install_name @rpath/RebornCamera.shv.dylib -o build/bridge/RebornCamera.shv.dylib
+          xcrun --sdk iphoneos clang -target arm64-apple-ios16.3 -isysroot "$SDK" -fobjc-arc -fmodules -O2 -dynamiclib ios/NativeCamera/Camera.m ios/NativeCamera/PluginKeys.m -I ios/NativeCamera -L ios/NativeCamera -lScriptHookV -framework Foundation -framework UIKit -install_name @rpath/RebornCamera.shv.dylib -o build/bridge/RebornCamera.shv.dylib
           cp ios/NativeBridge/launcher_vi.json build/bridge/launcher_vi.json
           xcrun vtool -show-build build/bridge/libRebornBridge.dylib
           shasum -a 256 build/bridge/libRebornBridge.dylib

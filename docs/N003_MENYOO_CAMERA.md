@@ -28,3 +28,9 @@ The package and original runtime binaries are local-only build inputs. The publi
 - Pending: actual iPhone startup, Menyoo display/navigation, camera script registration, vehicle touch rotation, mission transitions and 20-minute stability/FPS test.
 
 Native hash/signature reference: https://github.com/alloc8or/gta5-nativedb-data (data facts only; no implementation copied). Names were also verified in the supplied ScriptHook host's native list.
+
+## Plugin key panel
+
+On the native Add-ons page, tap Phím to show a floating plugin keyboard over gameplay. It contains F1–F12, numpad 8/2/4/6/5/0, arrow keys, Enter, Backspace, Escape and Tab. F7 Cam opens our camera settings directly; F8 is sent through the runtime's real key-event API. Hold for a held key; short taps are stretched to at least 120 ms to survive low frame rates. The panel is draggable by its header, collapsible and dismissible. Held keys are released when hidden/closed or the app resigns active, with pending releases invalidated so no key remains stuck. Camera and Phím buttons share the existing Add-ons navigation bar instead of replacing the native HUD buttons.
+
+The exact native input exports `compat::KeyFromMac(uint16_t)` and `compat::KeyEvent(const KeyInfo&, bool, unsigned)` were verified in the supplied runtime, including the F1–F12/numpad mappings. The panel resolves these exports by name at runtime; no hardcoded game-memory address is patched. UI placement and real plugin responses still require device verification.

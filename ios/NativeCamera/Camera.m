@@ -92,15 +92,20 @@ static void cameraMain(void){
 }
 @end
 static void (*originalAppear)(id,SEL,BOOL);
+void RBPresentCameraSettings(UIViewController *host){
+ if(host.presentedViewController)return;
+ [host presentViewController:[[UINavigationController alloc]initWithRootViewController:[RebornCameraSettings new]] animated:YES completion:nil];
+}
+extern void RBInstallKeyButton(UIViewController *host);
 static void openCamera(id self,SEL cmd){
  UIViewController *host=self;if(host.presentedViewController)return;
  [host presentViewController:[[UINavigationController alloc]initWithRootViewController:[RebornCameraSettings new]] animated:YES completion:nil];
 }
 static void appeared(id self,SEL cmd,BOOL animated){
  originalAppear(self,cmd,animated);UIViewController *host=self;
- for(UIBarButtonItem *item in host.navigationItem.leftBarButtonItems)if(item.tag==0x524343)return;
+ for(UIBarButtonItem *item in host.navigationItem.leftBarButtonItems)if(item.tag==0x524343){RBInstallKeyButton(host);return;}
  UIBarButtonItem *button=[[UIBarButtonItem alloc]initWithTitle:@"Camera" style:UIBarButtonItemStylePlain target:self action:NSSelectorFromString(@"rebornOpenCamera")];button.tag=0x524343;
- NSMutableArray *items=[(host.navigationItem.leftBarButtonItems?:@[]) mutableCopy];[items addObject:button];host.navigationItem.leftBarButtonItems=items;
+ NSMutableArray *items=[(host.navigationItem.leftBarButtonItems?:@[]) mutableCopy];[items addObject:button];host.navigationItem.leftBarButtonItems=items;RBInstallKeyButton(host);
 }
 __attribute__((constructor)) static void setupCameraMenu(void){
  NSUserDefaults *d=NSUserDefaults.standardUserDefaults;
